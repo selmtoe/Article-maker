@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>記事生成</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #111827; 
+            color: #d1d5db; 
+        }
+        #editor {
+            outline: none;
+            border: 1px solid #4b5563; 
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            background-color: #1f2937; 
+            color: #f9fafb; 
+            min-height: 400px;
+            line-height: 1.7;
+        }
+        #editor:focus {
+            border-color: #3b82f6; 
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+        }
+        .toolbar-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            color: #d1d5db;
+            background-color: #374151; 
+            transition: transform 0.1s ease-in-out, background-color 0.15s ease-in-out;
+        }
+        .toolbar-btn:hover {
+            background-color: #4b5563;
+            color: #ffffff;
+        }
+        .toolbar-btn:active {
+            transform: scale(0.95);
+            background-color: #1f2937;
+        }
+        #editor > * {
+            position: relative;
+            padding: 1rem 0.75rem 0.75rem;
+            margin: 0.5rem 0;
+            border: 1px dashed #4b5563;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s ease;
+        }
+        #editor > *:hover {
+            border-color: #6b7280;
+            background-color: rgba(55, 65, 81, 0.5); 
+        }
+        #editor > *::before {
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            padding: 0.125rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 0.375rem 0 0.375rem 0;
+            color: white;
+        }
+        #editor h1::before { content: 'タイトル'; background-color: #7c3aed; }
+        #editor h2::before { content: '見出し'; background-color: #1d4ed8; }
+        #editor h3::before { content: '小見出し'; background-color: #0d9488; }
+        #editor p::before { content: '本文'; background-color: #64748b; }
+        #editor img { padding-top: 2rem !important; }
+        #editor img::before { content: '画像'; background-color: #c2410c; }
+        #editor iframe { padding-top: 2rem !important; min-height: 150px; }
+        #editor iframe::before { content: '埋め込み'; background-color: #4f46e5; }
+        #editor b, #editor strong {
+            color: #fef08a; 
+            background-color: rgba(254, 240, 138, 0.1);
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.25rem;
+        }
+        #editor a {
+            color: #fde047; 
+            text-decoration: underline;
+            background-color: rgba(253, 224, 71, 0.15);
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.25rem;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #1f2937;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 500px;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto bg-gray-800 rounded-xl shadow-2xl p-6 md:p-8">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-100">高機能記事生成機</h1>
+            <p class="text-gray-400 mt-2">楽に記事生成</p>
+        </header>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+                <h2 class="text-xl font-semibold mb-3 text-gray-300">エディタ</h2>
+                <div id="toolbar" class="flex flex-wrap gap-2 border border-b-0 border-gray-600 bg-gray-700 p-3 rounded-t-lg">
+                    <button class="toolbar-btn" onclick="applyStyle('h1')" title="タイトル (H1)"><i data-lucide="heading-1"></i></button>
+                    <button class="toolbar-btn" onclick="applyStyle('h2')" title="見出し (H2)"><i data-lucide="heading-2"></i></button>
+                    <button class="toolbar-btn" onclick="applyStyle('h3')" title="小見出し (H3)"><i data-lucide="heading-3"></i></button>
+                    <button class="toolbar-btn" onclick="applyStyle('p')" title="新しい段落"><i data-lucide="pilcrow"></i></button>
+                    <button class="toolbar-btn" onclick="applyStyle('bold')" title="太字"><i data-lucide="bold"></i></button>
+                    <button class="toolbar-btn" onclick="insertImage()" title="画像を挿入"><i data-lucide="image"></i></button>
+                    <button class="toolbar-btn" onclick="showIframeModal()" title="URLやコードを埋め込む"><i data-lucide="code-2"></i></button>
+                    <button class="toolbar-btn" onclick="createLink()" title="リンクを作成"><i data-lucide="link"></i></button>
+                </div>
+                <div id="toolbar-feedback" class="h-6 text-sm text-blue-400 p-2 bg-gray-700 border-x border-gray-600"></div>
+                <div id="editor" contenteditable="true" oninput="updatePreview()">
+                    <h1>記事のタイトル</h1>
+                    <p>ここに本文を入力します。テキストを選択して、上のツールバーからスタイルを適用してください。</p>
+                    <h2>これは見出しです</h2>
+                    <p>画像やYouTube動画、Webサイトなども簡単に埋め込めます。</p>
+                    <h3>小見出し</h3>
+                    <p><b>太字</b>もこの通り。<a href="#">リンクの色も変わりました。</a>自由に記事を作成しましょう！</p>
+                </div>
+                 <div class="text-xs text-gray-400 mt-2 px-2">ヒント: Enterで改行、新しい段落はツールバーの[<i data-lucide="pilcrow" class="inline h-3 w-3"></i>]ボタンを押してください。</div>
+            </div>
+            <div>
+                <h2 class="text-xl font-semibold mb-3 text-gray-300">リアルタイムプレビュー</h2>
+                <div id="preview-wrapper" class="border border-gray-600 rounded-lg shadow-sm overflow-hidden bg-gray-900">
+                     <iframe id="preview" class="w-full h-[500px]"></iframe>
+                </div>
+            </div>
+        </div>
+        <div class="mt-12">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-200">生成されたHTMLコード</h2>
+            <div class="flex items-center gap-4 mb-4">
+                <button onclick="generateHtml()" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-150 active:scale-95 active:bg-blue-800">
+                    目次を生成してコードを更新
+                </button>
+                 <button onclick="copyToClipboard()" class="flex items-center gap-2 px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all duration-150 active:scale-95 active:bg-green-800">
+                    <i data-lucide="clipboard"></i>
+                    <span>コードをコピー</span>
+                </button>
+            </div>
+            <textarea id="output-code" class="w-full h-64 p-4 border border-gray-600 rounded-lg font-mono text-sm bg-gray-900 text-green-400" readonly></textarea>
+            <p id="copy-feedback" class="text-green-500 mt-2 h-5"></p>
+        </div>
+    </div>
+
+    <!-- iframe挿入モーダル -->
+    <div id="iframe-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-lg font-semibold text-gray-100 mb-4">埋め込みコンテンツの追加</h3>
+            <div class="mb-4">
+                <label class="block text-gray-300 mb-2">URLまたは埋め込みコード</label>
+                <textarea id="iframe-input" class="w-full p-2 bg-gray-700 text-gray-100 rounded" rows="4" placeholder="https://example.com または &lt;iframe&gt;&lt;/iframe&gt;"></textarea>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="hideIframeModal()" class="px-4 py-2 bg-gray-600 text-white rounded">キャンセル</button>
+                <button onclick="insertIframe()" class="px-4 py-2 bg-blue-600 text-white rounded">埋め込む</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="image-upload" accept="image/*" style="display: none;">
+    <script>
+        const editor = document.getElementById('editor');
+        const previewFrame = document.getElementById('preview');
+        const outputCode = document.getElementById('output-code');
+        const feedbackEl = document.getElementById('toolbar-feedback');
+        const imageUpload = document.getElementById('image-upload');
+        const iframeModal = document.getElementById('iframe-modal');
+        const iframeInput = document.getElementById('iframe-input');
+        let feedbackTimeout;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            document.execCommand("defaultParagraphSeparator", false, "p");
+            editor.addEventListener('keydown', handleEnterKey);
+            imageUpload.addEventListener('change', handleImageUpload);
+            updatePreview();
+            generateHtml();
+        });
+
+        function handleEnterKey(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                document.execCommand('insertLineBreak');
+            }
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                showFeedback('エラー: 画像ファイルを選択してください。', true);
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64Image = e.target.result;
+                const imgHtml = `<p><img src="${base64Image}" alt="アップロードされた画像" class="inserted-image"></p>`;
+                editor.focus();
+                document.execCommand('insertHTML', false, imgHtml);
+                showFeedback('画像を挿入しました。');
+                updatePreview();
+            };
+            reader.onerror = () => {
+                 showFeedback('エラー: ファイルの読み込みに失敗しました。', true);
+            };
+            reader.readAsDataURL(file);
+            event.target.value = ''; 
+        }
+
+        function showFeedback(message, isError = false) {
+            clearTimeout(feedbackTimeout);
+            feedbackEl.textContent = message;
+            feedbackEl.className = isError 
+                ? 'h-6 text-sm text-red-400 p-2 bg-gray-700 border-x border-gray-600' 
+                : 'h-6 text-sm text-blue-400 p-2 bg-gray-700 border-x border-gray-600';
+            feedbackTimeout = setTimeout(() => {
+                feedbackEl.textContent = '';
+            }, 4000);
+        }
+
+        function applyStyle(style) {
+            let message = '';
+            switch(style) {
+                case 'h1': document.execCommand('formatBlock', false, `<h1>`); message = 'タイトル (H1) を適用しました。'; break;
+                case 'h2': document.execCommand('formatBlock', false, `<h2>`); message = '見出し (H2) を適用しました。'; break;
+                case 'h3': document.execCommand('formatBlock', false, `<h3>`); message = '小見出し (H3) を適用しました。'; break;
+                case 'p': document.execCommand('formatBlock', false, `<p>`); message = '新しい段落を作成しました。'; break;
+                case 'bold': document.execCommand('bold'); message = '太字を適用しました。'; break;
+            }
+            showFeedback(message);
+            editor.focus();
+            updatePreview();
+        }
+
+        function insertImage() {
+            imageUpload.click();
+        }
+
+        function showIframeModal() {
+            iframeInput.value = '';
+            iframeModal.style.display = 'flex';
+        }
+
+        function hideIframeModal() {
+            iframeModal.style.display = 'none';
+        }
+
+        function insertIframe() {
+            const input = iframeInput.value.trim();
+            if (!input) {
+                showFeedback('入力が空です。', true);
+                return;
+            }
+
+            let embedHtml = '';
+            
+            // iframeタグが直接入力された場合
+            if (input.startsWith('<iframe')) {
+                embedHtml = input;
+            } 
+            // URLが入力された場合
+            else if (input.startsWith('http://') || input.startsWith('https://')) {
+                embedHtml = `<iframe src="${input}" style="width:100%; height:450px; border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
+            } 
+            // 不正な入力の場合
+            else {
+                showFeedback('正しいURLまたは埋め込みコードを入力してください。', true);
+                return;
+            }
+
+            // エディタに挿入
+            editor.focus();
+            const htmlToInsert = `<p>${embedHtml}</p>`;
+            
+            // 選択範囲がある場合はそれを置き換え、ない場合はカーソル位置に挿入
+            if (window.getSelection().toString()) {
+                document.execCommand('insertHTML', false, htmlToInsert);
+            } else {
+                document.execCommand('insertHTML', false, htmlToInsert);
+            }
+            
+            hideIframeModal();
+            showFeedback('コンテンツを埋め込みました。');
+            updatePreview();
+        }
+
+        function createLink() {
+            const selection = window.getSelection();
+            if (selection.rangeCount === 0 || selection.toString().trim() === '') {
+                showFeedback('先にリンクにしたいテキストを選択してください。', true);
+                return;
+            }
+            const url = prompt('リンク先のURLを入力してください:', 'https://');
+            if (url) {
+                editor.focus();
+                document.execCommand('createLink', false, url);
+                showFeedback('リンクを作成しました。');
+                updatePreview();
+            }
+        }
+
+        function updatePreview() {
+            const content = editor.innerHTML;
+            const previewDoc = previewFrame.contentDocument;
+            const previewStyles = `
+                .preview-content h1 { font-size: 2.25em; font-weight: bold; margin-top: 1.5em; margin-bottom: 0.75em; border-bottom: 2px solid #374151; padding-bottom: 0.25em; }
+                .preview-content h2 { font-size: 1.875em; font-weight: bold; margin-top: 1.5em; margin-bottom: 0.75em; border-bottom: 1px solid #374151; padding-bottom: 0.25em; }
+                .preview-content h3 { font-size: 1.5em; font-weight: bold; margin-top: 1.25em; margin-bottom: 0.5em; }
+                .preview-content p { margin-bottom: 1em; }
+                .preview-content b, .preview-content strong { font-weight: bold; color: #fef08a; }
+                .preview-content img.inserted-image, .preview-content img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 1em 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                .preview-content iframe { width: 100%; min-height: 450px; border: 1px solid #4b5563; border-radius: 0.5rem; margin: 1em 0; }
+                .preview-content a { color: #fde047; text-decoration: underline; }
+                .toc { background-color: #1f2937; border: 1px solid #4b5563; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 2rem; }
+                .toc h2 { font-size: 1.25em; font-weight: bold; margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid #4b5563; padding-bottom: 0.5rem; color: #e5e7eb; }
+                .toc ul { list-style-type: none; padding-left: 0; }
+                .toc ul ul { padding-left: 1.5rem; margin-top: 0.5rem; }
+                .toc a { text-decoration: none; color: #d1d5db; }
+                .toc a:hover { text-decoration: underline; color: #ffffff; }
+            `;
+            previewDoc.open();
+            previewDoc.write(`
+                <!DOCTYPE html><html lang="ja"><head>
+                    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>プレビュー</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+                    <style>
+                        body { font-family: 'Inter', 'Noto Sans JP', sans-serif; line-height: 1.7; margin: 0; padding: 2rem; background-color: #111827; color: #d1d5db; }
+                        ${previewStyles}
+                    </style>
+                </head><body><div class="preview-content">${content}</div></body></html>
+            `);
+            previewDoc.close();
+        }
+
+        function generateToc(content) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            const headers = tempDiv.querySelectorAll('h1, h2, h3');
+            if (headers.length < 2) return { tocHtml: '', contentWithIds: content };
+            let toc = '<div class="toc"><h2>目次</h2><ul>';
+            let currentLevel = 0;
+            headers.forEach((header, index) => {
+                const level = parseInt(header.tagName.substring(1), 10);
+                const id = `toc-${index}-${header.textContent.slice(0,10).replace(/\s/g,'_')}`;
+                header.id = id;
+                if (level > currentLevel) {
+                    toc += '<ul>'.repeat(level - currentLevel);
+                } else if (level < currentLevel) {
+                    toc += '</ul>'.repeat(currentLevel - level);
+                }
+                toc += `<li><a href="#${id}">${header.textContent}</a></li>`;
+                currentLevel = level;
+            });
+            toc += '</ul>'.repeat(currentLevel) + '</div>';
+            return { tocHtml: toc, contentWithIds: tempDiv.innerHTML };
+        }
+
+        function generateHtml() {
+            const content = editor.innerHTML;
+            const { tocHtml, contentWithIds } = generateToc(content);
+            const title = editor.querySelector('h1')?.textContent || '無題の記事';
+            const finalHtml = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            line-height: 1.7;
+            margin: 0 auto;
+            max-width: 800px;
+            padding: 20px;
+            background-color: #111827;
+            color: #d1d5db;
+        }
+        h1 { font-size: 2.25em; font-weight: bold; margin-top: 1.5em; margin-bottom: 0.75em; border-bottom: 2px solid #374151; padding-bottom: 0.25em; }
+        h2 { font-size: 1.875em; font-weight: bold; margin-top: 1.5em; margin-bottom: 0.75em; border-bottom: 1px solid #374151; padding-bottom: 0.25em; }
+        h3 { font-size: 1.5em; font-weight: bold; margin-top: 1.25em; margin-bottom: 0.5em; }
+        p { margin-bottom: 1em; }
+        b, strong { font-weight: bold; color: #fef08a; }
+        img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 1em 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        iframe { width: 100%; min-height: 450px; border: 1px solid #4b5563; border-radius: 0.5rem; margin: 1em 0; }
+        ul, ol { padding-left: 1.5em; margin-bottom: 1em; }
+        a { color: #fde047; text-decoration: underline; }
+        .toc { background-color: #1f2937; border: 1px solid #4b5563; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 2rem; }
+        .toc h2 { font-size: 1.25em; font-weight: bold; margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid #4b5563; padding-bottom: 0.5rem; color: #e5e7eb; }
+        .toc ul { list-style-type: none; padding-left: 0; }
+        .toc ul ul { padding-left: 1.5rem; margin-top: 0.5rem; }
+        .toc a { text-decoration: none; color: #d1d5db; }
+        .toc a:hover { text-decoration: underline; color: #ffffff; }
+    </style>
+</head>
+<body>
+    ${tocHtml}
+    ${contentWithIds}
+</body>
+</html>`;
+            outputCode.value = finalHtml;
+            const previewDoc = previewFrame.contentDocument;
+            const previewBody = previewDoc.body;
+            if(previewBody) {
+                const previewContent = previewBody.querySelector('.preview-content');
+                if (previewContent) {
+                    previewContent.innerHTML = contentWithIds;
+                    const existingToc = previewBody.querySelector('.toc');
+                    if(existingToc) existingToc.remove();
+                    previewBody.insertAdjacentHTML('afterbegin', tocHtml);
+                }
+            }
+        }
+
+        function copyToClipboard() {
+            outputCode.select();
+            document.execCommand('copy');
+            const feedback = document.getElementById('copy-feedback');
+            feedback.textContent = 'コピーしました！';
+            setTimeout(() => {
+                feedback.textContent = '';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
