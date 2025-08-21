@@ -122,7 +122,8 @@
                     <button class="toolbar-btn" onclick="applyStyle('h1')" title="タイトル (H1)"><i data-lucide="heading-1"></i></button>
                     <button class="toolbar-btn" onclick="applyStyle('h2')" title="見出し (H2)"><i data-lucide="heading-2"></i></button>
                     <button class="toolbar-btn" onclick="applyStyle('h3')" title="小見出し (H3)"><i data-lucide="heading-3"></i></button>
-                    <button class="toolbar-btn" onclick="applyStyle('p')" title="新しい段落"><i data-lucide="pilcrow"></i></button>
+                    <button class="toolbar-btn" onclick="applyStyle('p')" title="選択部分を本文に変更"><i data-lucide="pilcrow"></i></button>
+<button class="toolbar-btn" onclick="addNewTextBox()" title="新しいテキストボックスを追加"><i data-lucide="square-plus"></i></button>
                     <button class="toolbar-btn" onclick="applyStyle('bold')" title="太字"><i data-lucide="bold"></i></button>
                     <button class="toolbar-btn" onclick="insertImage()" title="画像を挿入"><i data-lucide="image"></i></button>
                     <button class="toolbar-btn" onclick="showIframeModal()" title="URLやコードを埋め込む"><i data-lucide="code-2"></i></button>
@@ -188,13 +189,19 @@
         const iframeInput = document.getElementById('iframe-input');
         let feedbackTimeout;
         
-        document.addEventListener('DOMContentLoaded', () => {
+
+document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             document.execCommand("defaultParagraphSeparator", false, "p");
             editor.addEventListener('keydown', handleEnterKey);
             imageUpload.addEventListener('change', handleImageUpload);
             updatePreview();
             generateHtml();
+            
+            // 定期的にアイコンを再初期化（追加されたボタンのアイコン用）
+            setInterval(() => {
+                lucide.createIcons();
+            }, 1000);
         });
 
         function handleEnterKey(event) {
@@ -431,6 +438,35 @@
                     previewBody.insertAdjacentHTML('afterbegin', tocHtml);
                 }
             }
+        }
+
+function addNewTextBox() {
+            // 新しい段落要素を作成
+            const newParagraph = document.createElement('p');
+            newParagraph.innerHTML = '新しいテキストボックス';
+            
+            // エディタに追加
+            editor.focus();
+            
+            // 現在の選択位置を取得
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.insertNode(newParagraph);
+                
+                // 新しい段落の後にカーソルを移動
+                const newRange = document.createRange();
+                newRange.setStartAfter(newParagraph);
+                newRange.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+            } else {
+                // 選択範囲がない場合は末尾に追加
+                editor.appendChild(newParagraph);
+            }
+            
+            showFeedback('新しいテキストボックスを追加しました。');
+            updatePreview();
         }
 
         function copyToClipboard() {
