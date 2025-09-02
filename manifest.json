@@ -1,0 +1,8 @@
+{
+  "short_name": "記事生成機",
+  "name": "高機能記事生成機",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#3b82f6"
+}
