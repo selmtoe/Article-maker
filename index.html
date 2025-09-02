@@ -7,7 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6">
     <style>
+        /* ... CSSスタイルは変更なし ... */
         body {
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
             background-color: #111827;
@@ -75,7 +79,6 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background-color: #1f2937; padding: 2rem; border-radius: 0.5rem; width: 90%; max-width: 500px; }
         #color-picker-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-        /* ▼▼▼ 追加したCSS ▼▼▼ */
         #toolbar-wrapper.fixed {
             position: fixed;
             top: 1rem; /* 画面上部からの余白 */
@@ -87,10 +90,9 @@
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        /* ▲▲▲ 追加したCSS ▲▲▲ */
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body>
     <div class="max-w-7xl mx-auto bg-gray-800 rounded-xl shadow-2xl p-6 md:p-8">
         <header class="mb-8 text-center">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-100">高機能記事生成機</h1>
@@ -125,7 +127,8 @@
             <div>
                 <h2 class="text-xl font-semibold mb-3 text-gray-300">リアルタイムプレビュー</h2>
                 <div id="preview-wrapper" class="border border-gray-600 rounded-lg shadow-sm overflow-hidden bg-gray-900">
-                     <iframe id="preview" class="w-full h-[500px]" style="transition: height 0.3s ease;"></iframe> </div>
+                     <iframe id="preview" class="w-full h-[500px]" style="transition: height 0.3s ease;"></iframe>
+                </div>
             </div>
         </div>
         <div class="mt-12">
@@ -161,10 +164,11 @@
             <button onclick="insertIframe()" class="px-4 py-2 bg-blue-600 text-white rounded">埋め込む</button>
         </div>
     </div></div>
-
+    
     <input type="file" id="image-upload" accept="image/*" style="display: none;">
-
+    
     <script>
+        // ... JavaScriptは変更なし ...
         const editor = document.getElementById('editor');
         const previewFrame = document.getElementById('preview');
         const outputCode = document.getElementById('output-code');
@@ -173,26 +177,25 @@
         const importFile = document.getElementById('import-file');
         const iframeModal = document.getElementById('iframe-modal');
         const iframeInput = document.getElementById('iframe-input');
-
+        
         let feedbackTimeout;
         let saveTimeout;
-        let savedRange = null;
+        let savedRange = null; 
 
         // --- 初期化処理 ---
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             document.execCommand("defaultParagraphSeparator", false, "p");
-
-            loadData();
-
+            
+            loadData(); 
+            
             editor.addEventListener('keydown', handleEnterKey);
             imageUpload.addEventListener('change', handleImageUpload);
             importFile.addEventListener('change', handleImport);
-
+            
             updatePreview();
             generateHtml();
 
-            // ▼▼▼ ツールバー固定処理を追加 ▼▼▼
             setupStickyToolbar();
         });
 
@@ -201,31 +204,26 @@
             const toolbarWrapper = document.getElementById('toolbar-wrapper');
             if (!toolbarWrapper) return;
 
-            // 元の位置を計算するために、ツールバーの親要素からの相対位置を取得
             const toolbarOriginalOffsetTop = toolbarWrapper.offsetTop;
 
             window.addEventListener('scroll', () => {
-                // 親要素（エディタの列）の表示領域上部からの距離を取得
                 const parentRect = toolbarWrapper.parentElement.getBoundingClientRect();
 
-                // 本来ツールバーがあるべき位置が画面外（上）にスクロールされたら固定
                 if (window.scrollY > toolbarOriginalOffsetTop) {
                     if (!toolbarWrapper.classList.contains('fixed')) {
                         const wrapperRect = toolbarWrapper.getBoundingClientRect();
-                        // ツールバーの幅と、エディタ上部の余白を設定
                         toolbarWrapper.style.width = `${wrapperRect.width}px`;
                         editor.style.paddingTop = `${wrapperRect.height}px`;
                         toolbarWrapper.classList.add('fixed');
                     }
                 } else {
                     if (toolbarWrapper.classList.contains('fixed')) {
-                        // 固定を解除し、スタイルを元に戻す
                         toolbarWrapper.classList.remove('fixed');
                         toolbarWrapper.style.width = '';
                         editor.style.paddingTop = '';
                     }
                 }
-            }, { passive: true }); // パフォーマンス向上のため
+            }, { passive: true });
         }
 
 
@@ -235,7 +233,7 @@
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(saveData, 500);
         }
-
+        
         function saveData() {
             localStorage.setItem('editorContent', editor.innerHTML);
             showFeedback('自動保存しました', false);
@@ -260,7 +258,7 @@
             URL.revokeObjectURL(url);
             showFeedback('データをエクスポートしました', false);
         }
-
+        
         function handleImport(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -274,6 +272,7 @@
             reader.readAsText(file);
             event.target.value = '';
         }
+
 
         // --- エディタ操作 ---
         function getBlockElementFromRange(range) {
@@ -289,14 +288,14 @@
                 document.execCommand('insertParagraph');
             }
         }
-
+        
         function showFeedback(message, isError = false) {
             clearTimeout(feedbackTimeout);
             feedbackEl.textContent = message;
             feedbackEl.className = `h-6 text-sm p-2 bg-gray-700 border-x border-gray-600 ${isError ? 'text-red-400' : 'text-blue-400'}`;
             feedbackTimeout = setTimeout(() => { feedbackEl.textContent = ''; }, 3000);
         }
-
+        
         function applyBlockStyle(tagName) {
             document.execCommand('formatBlock', false, `<${tagName}>`);
             onEditorInput();
@@ -341,7 +340,7 @@
             };
             reader.readAsDataURL(file);
         }
-
+        
         function insertImage() {
             imageUpload.click();
         }
@@ -374,14 +373,14 @@
             const wrapper = document.createElement('div');
             wrapper.dataset.embedWrapper = true;
             wrapper.innerHTML = embedHtml;
-
+            
             const currentBlock = getBlockElementFromRange(savedRange);
             if (currentBlock) {
                 currentBlock.after(wrapper);
             } else {
-                editor.appendChild(wrapper);
+                editor.appendChild(wrapper); 
             }
-
+            
             hideIframeModal();
             onEditorInput();
         }
@@ -413,16 +412,13 @@
                 <style>body { font-family: 'Inter', 'Noto Sans JP', sans-serif; line-height: 1.7; margin: 2rem; background-color: #111827; color: #d1d5db; overflow: hidden; } ${previewStyles}</style>
                 </head><body><div class="preview-content">${content}</div></body></html>`);
             previewDoc.close();
-
-            // ▼▼▼ プレビューの高さを動的に調整する処理 ▼▼▼
-            // iframeの読み込みが完了した時点で高さを再計算
+            
             previewFrame.onload = () => {
                 const contentHeight = previewFrame.contentDocument.body.scrollHeight;
-                // コンテンツの高さに少し余白を加えて設定（最低でも400pxは確保）
                 previewFrame.style.height = `${Math.max(contentHeight + 20, 400)}px`;
             };
         }
-
+        
         function generateToc(content) {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = content;
@@ -467,8 +463,20 @@ body{font-family:system-ui,sans-serif;line-height:1.7;margin:0 auto;max-width:80
             feedback.textContent = 'コピーしました！';
             setTimeout(() => { feedback.textContent = ''; }, 2000);
         }
-
+        
         setInterval(() => { lucide.createIcons(); }, 2000);
     </script>
-</body>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').then(registration => {
+            console.log('サービスワーカーの登録に成功しました: ', registration.scope);
+          }, err => {
+            console.log('サービスワーカーの登録に失敗しました: ', err);
+          });
+        });
+      }
+    </script>
+    </body>
 </html>
