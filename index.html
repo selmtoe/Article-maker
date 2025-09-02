@@ -10,21 +10,22 @@
     <style>
         body {
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
-            background-color: #111827; 
-            color: #d1d5db; 
+            background-color: #111827;
+            color: #d1d5db;
         }
         #editor {
             outline: none;
-            border: 1px solid #4b5563; 
+            border: 1px solid #4b5563;
             padding: 1.5rem;
-            border-radius: 0.5rem;
-            background-color: #1f2937; 
-            color: #f9fafb; 
+            border-radius: 0 0 0.5rem 0.5rem; /* 角丸を調整 */
+            background-color: #1f2937;
+            color: #f9fafb;
             min-height: 400px;
             line-height: 1.7;
+            transition: padding-top 0.2s ease-in-out; /* パディング変化を滑らかに */
         }
         #editor:focus {
-            border-color: #3b82f6; 
+            border-color: #3b82f6;
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
         }
         .toolbar-btn {
@@ -34,7 +35,7 @@
             padding: 0.5rem;
             border-radius: 0.375rem;
             color: #d1d5db;
-            background-color: #374151; 
+            background-color: #374151;
             transition: transform 0.1s ease-in-out, background-color 0.15s ease-in-out;
             position: relative;
         }
@@ -56,7 +57,7 @@
         }
         #editor > *:hover {
             border-color: #6b7280;
-            background-color: rgba(55, 65, 81, 0.5); 
+            background-color: rgba(55, 65, 81, 0.5);
         }
         #editor > *::before {
             position: absolute; top: -1px; left: -1px; padding: 0.125rem 0.5rem; font-size: 0.75rem; font-weight: 600;
@@ -74,6 +75,19 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background-color: #1f2937; padding: 2rem; border-radius: 0.5rem; width: 90%; max-width: 500px; }
         #color-picker-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        /* ▼▼▼ 追加したCSS ▼▼▼ */
+        #toolbar-wrapper.fixed {
+            position: fixed;
+            top: 1rem; /* 画面上部からの余白 */
+            z-index: 50;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            animation: fadeInDown 0.3s ease-out;
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* ▲▲▲ 追加したCSS ▲▲▲ */
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -85,22 +99,24 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
                 <h2 class="text-xl font-semibold mb-3 text-gray-300">エディタ</h2>
-                <div id="toolbar" class="flex flex-wrap gap-2 border border-b-0 border-gray-600 bg-gray-700 p-3 rounded-t-lg">
-                    <button class="toolbar-btn" onclick="applyBlockStyle('h1')" title="タイトル (H1)"><i data-lucide="heading-1"></i></button>
-                    <button class="toolbar-btn" onclick="applyBlockStyle('h2')" title="見出し (H2)"><i data-lucide="heading-2"></i></button>
-                    <button class="toolbar-btn" onclick="applyBlockStyle('h3')" title="小見出し (H3)"><i data-lucide="heading-3"></i></button>
-                    <button class="toolbar-btn" onclick="applyBlockStyle('p')" title="本文に変更"><i data-lucide="pilcrow"></i></button>
-                    <button class="toolbar-btn" onclick="addNewTextBox()" title="新しいテキストボックスを追加"><i data-lucide="square-plus"></i></button>
-                    <button class="toolbar-btn" onclick="applyInlineStyle('bold')" title="太字"><i data-lucide="bold"></i></button>
-                    <button class="toolbar-btn" title="文字色">
-                        <i data-lucide="highlighter"></i>
-                        <input id="color-picker-input" type="color" onchange="changeTextColor(this.value)">
-                    </button>
-                    <button class="toolbar-btn" onclick="insertImage()" title="画像を挿入"><i data-lucide="image"></i></button>
-                    <button class="toolbar-btn" onclick="showIframeModal()" title="URLやコードを埋め込む"><i data-lucide="code-2"></i></button>
-                    <button class="toolbar-btn" onclick="createLink()" title="リンクを作成"><i data-lucide="link"></i></button>
+                <div id="toolbar-wrapper">
+                    <div id="toolbar" class="flex flex-wrap gap-2 border border-b-0 border-gray-600 bg-gray-700 p-3 rounded-t-lg">
+                        <button class="toolbar-btn" onclick="applyBlockStyle('h1')" title="タイトル (H1)"><i data-lucide="heading-1"></i></button>
+                        <button class="toolbar-btn" onclick="applyBlockStyle('h2')" title="見出し (H2)"><i data-lucide="heading-2"></i></button>
+                        <button class="toolbar-btn" onclick="applyBlockStyle('h3')" title="小見出し (H3)"><i data-lucide="heading-3"></i></button>
+                        <button class="toolbar-btn" onclick="applyBlockStyle('p')" title="本文に変更"><i data-lucide="pilcrow"></i></button>
+                        <button class="toolbar-btn" onclick="addNewTextBox()" title="新しいテキストボックスを追加"><i data-lucide="square-plus"></i></button>
+                        <button class="toolbar-btn" onclick="applyInlineStyle('bold')" title="太字"><i data-lucide="bold"></i></button>
+                        <button class="toolbar-btn" title="文字色">
+                            <i data-lucide="highlighter"></i>
+                            <input id="color-picker-input" type="color" onchange="changeTextColor(this.value)">
+                        </button>
+                        <button class="toolbar-btn" onclick="insertImage()" title="画像を挿入"><i data-lucide="image"></i></button>
+                        <button class="toolbar-btn" onclick="showIframeModal()" title="URLやコードを埋め込む"><i data-lucide="code-2"></i></button>
+                        <button class="toolbar-btn" onclick="createLink()" title="リンクを作成"><i data-lucide="link"></i></button>
+                    </div>
+                    <div id="toolbar-feedback" class="h-6 text-sm text-blue-400 p-2 bg-gray-700 border-x border-gray-600"></div>
                 </div>
-                <div id="toolbar-feedback" class="h-6 text-sm text-blue-400 p-2 bg-gray-700 border-x border-gray-600"></div>
                 <div id="editor" contenteditable="true" oninput="onEditorInput()">
                     <h1>記事のタイトル</h1>
                     <p>ここに本文を入力します。テキストを選択して、上のツールバーからスタイルを適用してください。</p>
@@ -109,8 +125,7 @@
             <div>
                 <h2 class="text-xl font-semibold mb-3 text-gray-300">リアルタイムプレビュー</h2>
                 <div id="preview-wrapper" class="border border-gray-600 rounded-lg shadow-sm overflow-hidden bg-gray-900">
-                     <iframe id="preview" class="w-full h-[500px]"></iframe>
-                </div>
+                     <iframe id="preview" class="w-full h-[500px]" style="transition: height 0.3s ease;"></iframe> </div>
             </div>
         </div>
         <div class="mt-12">
@@ -146,9 +161,9 @@
             <button onclick="insertIframe()" class="px-4 py-2 bg-blue-600 text-white rounded">埋め込む</button>
         </div>
     </div></div>
-    
+
     <input type="file" id="image-upload" accept="image/*" style="display: none;">
-    
+
     <script>
         const editor = document.getElementById('editor');
         const previewFrame = document.getElementById('preview');
@@ -158,34 +173,69 @@
         const importFile = document.getElementById('import-file');
         const iframeModal = document.getElementById('iframe-modal');
         const iframeInput = document.getElementById('iframe-input');
-        
+
         let feedbackTimeout;
         let saveTimeout;
-        let savedRange = null; // 埋め込みモーダル表示前のカーソル位置を保存
+        let savedRange = null;
 
         // --- 初期化処理 ---
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             document.execCommand("defaultParagraphSeparator", false, "p");
-            
-            loadData(); // ブラウザからデータを読み込む
-            
+
+            loadData();
+
             editor.addEventListener('keydown', handleEnterKey);
             imageUpload.addEventListener('change', handleImageUpload);
             importFile.addEventListener('change', handleImport);
-            
+
             updatePreview();
             generateHtml();
+
+            // ▼▼▼ ツールバー固定処理を追加 ▼▼▼
+            setupStickyToolbar();
         });
+
+        // --- ツールバー固定機能 ---
+        function setupStickyToolbar() {
+            const toolbarWrapper = document.getElementById('toolbar-wrapper');
+            if (!toolbarWrapper) return;
+
+            // 元の位置を計算するために、ツールバーの親要素からの相対位置を取得
+            const toolbarOriginalOffsetTop = toolbarWrapper.offsetTop;
+
+            window.addEventListener('scroll', () => {
+                // 親要素（エディタの列）の表示領域上部からの距離を取得
+                const parentRect = toolbarWrapper.parentElement.getBoundingClientRect();
+
+                // 本来ツールバーがあるべき位置が画面外（上）にスクロールされたら固定
+                if (window.scrollY > toolbarOriginalOffsetTop) {
+                    if (!toolbarWrapper.classList.contains('fixed')) {
+                        const wrapperRect = toolbarWrapper.getBoundingClientRect();
+                        // ツールバーの幅と、エディタ上部の余白を設定
+                        toolbarWrapper.style.width = `${wrapperRect.width}px`;
+                        editor.style.paddingTop = `${wrapperRect.height}px`;
+                        toolbarWrapper.classList.add('fixed');
+                    }
+                } else {
+                    if (toolbarWrapper.classList.contains('fixed')) {
+                        // 固定を解除し、スタイルを元に戻す
+                        toolbarWrapper.classList.remove('fixed');
+                        toolbarWrapper.style.width = '';
+                        editor.style.paddingTop = '';
+                    }
+                }
+            }, { passive: true }); // パフォーマンス向上のため
+        }
+
 
         // --- データ管理 (保存/読込/入出力) ---
         function onEditorInput() {
             updatePreview();
-            // 入力のたびに保存処理を予約（負荷軽減のため）
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(saveData, 500);
         }
-        
+
         function saveData() {
             localStorage.setItem('editorContent', editor.innerHTML);
             showFeedback('自動保存しました', false);
@@ -210,7 +260,7 @@
             URL.revokeObjectURL(url);
             showFeedback('データをエクスポートしました', false);
         }
-        
+
         function handleImport(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -222,9 +272,8 @@
                 showFeedback('データをインポートしました', false);
             };
             reader.readAsText(file);
-            event.target.value = ''; // 同じファイルを連続で選択できるように
+            event.target.value = '';
         }
-
 
         // --- エディタ操作 ---
         function getBlockElementFromRange(range) {
@@ -240,14 +289,14 @@
                 document.execCommand('insertParagraph');
             }
         }
-        
+
         function showFeedback(message, isError = false) {
             clearTimeout(feedbackTimeout);
             feedbackEl.textContent = message;
             feedbackEl.className = `h-6 text-sm p-2 bg-gray-700 border-x border-gray-600 ${isError ? 'text-red-400' : 'text-blue-400'}`;
             feedbackTimeout = setTimeout(() => { feedbackEl.textContent = ''; }, 3000);
         }
-        
+
         function applyBlockStyle(tagName) {
             document.execCommand('formatBlock', false, `<${tagName}>`);
             onEditorInput();
@@ -292,13 +341,12 @@
             };
             reader.readAsDataURL(file);
         }
-        
+
         function insertImage() {
             imageUpload.click();
         }
 
         function showIframeModal() {
-            // モーダルを開く前に現在の選択範囲（カーソル位置）を保存
             if (window.getSelection().rangeCount > 0) {
                 savedRange = window.getSelection().getRangeAt(0).cloneRange();
             }
@@ -326,14 +374,14 @@
             const wrapper = document.createElement('div');
             wrapper.dataset.embedWrapper = true;
             wrapper.innerHTML = embedHtml;
-            
+
             const currentBlock = getBlockElementFromRange(savedRange);
             if (currentBlock) {
                 currentBlock.after(wrapper);
             } else {
-                editor.appendChild(wrapper); // フォールバック
+                editor.appendChild(wrapper);
             }
-            
+
             hideIframeModal();
             onEditorInput();
         }
@@ -342,7 +390,6 @@
         // --- HTML生成 & プレビュー ---
         function updatePreview() {
             let content = editor.innerHTML;
-            // <font>タグを<span>に変換してプレビュー
             content = content.replace(/<font color="([^"]+)">/g, '<span style="color:$1;">').replace(/<\/font>/g, '</span>');
 
             const previewDoc = previewFrame.contentDocument;
@@ -363,11 +410,19 @@
             `;
             previewDoc.open();
             previewDoc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>プレビュー</title>
-                <style>body { font-family: 'Inter', 'Noto Sans JP', sans-serif; line-height: 1.7; margin: 2rem; background-color: #111827; color: #d1d5db; } ${previewStyles}</style>
+                <style>body { font-family: 'Inter', 'Noto Sans JP', sans-serif; line-height: 1.7; margin: 2rem; background-color: #111827; color: #d1d5db; overflow: hidden; } ${previewStyles}</style>
                 </head><body><div class="preview-content">${content}</div></body></html>`);
             previewDoc.close();
+
+            // ▼▼▼ プレビューの高さを動的に調整する処理 ▼▼▼
+            // iframeの読み込みが完了した時点で高さを再計算
+            previewFrame.onload = () => {
+                const contentHeight = previewFrame.contentDocument.body.scrollHeight;
+                // コンテンツの高さに少し余白を加えて設定（最低でも400pxは確保）
+                previewFrame.style.height = `${Math.max(contentHeight + 20, 400)}px`;
+            };
         }
-        
+
         function generateToc(content) {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = content;
@@ -391,7 +446,6 @@
 
         function generateHtml() {
             let content = editor.innerHTML;
-            // 古い<font>タグを現代的な<span>タグに置換
             content = content.replace(/<font color="([^"]+)">/g, '<span style="color:$1;">').replace(/<\/font>/g, '</span>');
 
             const { tocHtml, contentWithIds } = generateToc(content);
@@ -413,7 +467,7 @@ body{font-family:system-ui,sans-serif;line-height:1.7;margin:0 auto;max-width:80
             feedback.textContent = 'コピーしました！';
             setTimeout(() => { feedback.textContent = ''; }, 2000);
         }
-        
+
         setInterval(() => { lucide.createIcons(); }, 2000);
     </script>
 </body>
