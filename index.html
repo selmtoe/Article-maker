@@ -10,11 +10,21 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3b82f6">
     <style>
-        /* 【追加】選択時のハイライト色をカスタマイズ */
+        /* 選択時のハイライト色をカスタマイズ (前回の提案) */
         ::selection {
-          background-color: #4b5563; /* より自然な選択色 */
-          color: #f9fafb;
+          background-color: #4b5563; /* 少し明るいグレー（ツールバーの色と合わせるなど） */
+          color: #f9fafb;          /* 文字色を白に */
         }
+
+        /* 【追加】エディタ内の全ての要素の背景色を強制的に透過にする */
+        #editor *, #editor {
+            background-color: transparent !important;
+        }
+        /* ただし、エディタ自体の背景色は維持するため、エディタのスタイルを再定義 */
+        #editor {
+            background-color: #1f2937 !important; /* エディタ自体の背景色を再設定 */
+        }
+
 
         body {
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
