@@ -112,12 +112,24 @@
                         <button class="toolbar-btn" onclick="applyBlockStyle('p')" title="本文に変更"><i data-lucide="pilcrow"></i></button>
                         <button class="toolbar-btn" onclick="addNewTextBox()" title="新しいテキストボックスを追加"><i data-lucide="square-plus"></i></button>
                         <button class="toolbar-btn" onclick="applyInlineStyle('bold')" title="太字"><i data-lucide="bold"></i></button>
+
                         <button class="toolbar-btn" title="文字色">
                             <i data-lucide="highlighter"></i>
                             <input id="color-picker-input" type="color" onchange="changeTextColor(this.value)">
                         </button>
+                        <div class="toolbar-btn relative" title="フォントを変更">
+                            <i data-lucide="case-sensitive"></i>
+                            <select onchange="changeFont(this.value)" class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer">
+                                <option value="Inter, 'Noto Sans JP', sans-serif">デフォルト</option>
+                                <option value="serif">明朝体</option>
+                                <option value="monospace">ゴシック体</option>
+                                <option value="'MS PMincho', 'Hiragino Mincho ProN', serif">MS P明朝</option>
+                                <option value="'MS PGothic', 'Hiragino Kaku Gothic ProN', sans-serif">MS Pゴシック</option>
+                            </select>
+                        </div>
                         <button class="toolbar-btn" onclick="insertImage()" title="画像を挿入"><i data-lucide="image"></i></button>
                         <button class="toolbar-btn" onclick="showIframeModal()" title="URLやコードを埋め込む"><i data-lucide="code-2"></i></button>
+
                         <button class="toolbar-btn" onclick="createLink()" title="リンクを作成"><i data-lucide="link"></i></button>
                     </div>
                     <div id="toolbar-feedback" class="h-6 text-sm text-blue-400 p-2 bg-gray-700 border-x border-gray-600"></div>
@@ -329,8 +341,18 @@
             }
         }
 
+        function changeFont(font) {
+            if(font) {
+                document.execCommand('fontName', false, font);
+                showFeedback('フォントを変更しました。');
+                editor.focus();
+                onEditorInput();
+            }
+        }
+
         function createLink() {
             const url = prompt('リンク先のURLを入力してください:', 'https://');
+
             if (url) {
                 document.execCommand('createLink', false, url);
                 onEditorInput();
@@ -403,10 +425,11 @@
 
         function updatePreview() {
             let content = editor.innerHTML;
-            content = content.replace(/<font color="([^"]+)">/g, '<span style="color:$1;">').replace(/<\/font>/g, '</span>');
+            content = content.replace(/<font face="([^"]+)">/g, '<span style="font-family:$1;">').replace(/<font color="([^"]+)">/g, '<span style="color:$1;">').replace(/<\/font>/g, '</span>');
 
             const previewDoc = previewFrame.contentDocument;
             const previewStyles = `
+
                 h1,h2,h3 { margin-top: 1.5em; margin-bottom: 0.75em; font-weight: bold; }
                 h1 { font-size: 2.25em; border-bottom: 2px solid #374151; padding-bottom: 0.25em; }
                 h2 { font-size: 1.875em; border-bottom: 1px solid #374151; padding-bottom: 0.25em; }
@@ -483,6 +506,7 @@
 
             const { tocHtml, contentWithIds } = generateToc(content);
             const title = editor.querySelector('h1')?.textContent || '無題の記事';
+
             const finalHtml = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${title}</title>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script>
 <style>
