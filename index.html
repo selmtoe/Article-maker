@@ -5,26 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>高機能記事生成機</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3b82f6">
     <style>
-        /* 選択時のハイライト色をカスタマイズ (前回の提案) */
-        ::selection {
-          background-color: #4b5563; /* 少し明るいグレー（ツールバーの色と合わせるなど） */
-          color: #f9fafb;          /* 文字色を白に */
-        }
 
-        /* 【追加】エディタ内の全ての要素の背景色を強制的に透過にする */
-        #editor *, #editor {
-            background-color: transparent !important;
-        }
-        /* ただし、エディタ自体の背景色は維持するため、エディタのスタイルを再定義 */
-        #editor {
-            background-color: #1f2937 !important; /* エディタ自体の背景色を再設定 */
-        }
-
+        /* ... CSSスタイルは変更なし ... */
 
         body {
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
@@ -35,12 +24,12 @@
             outline: none;
             border: 1px solid #4b5563;
             padding: 1.5rem;
-            border-radius: 0 0 0.5rem 0.5rem;
+            border-radius: 0 0 0.5rem 0.5rem; /* 角丸を調整 */
             background-color: #1f2937;
             color: #f9fafb;
             min-height: 400px;
             line-height: 1.7;
-            transition: padding-top 0.2s ease-in-out;
+            transition: padding-top 0.2s ease-in-out; /* パディング変化を滑らかに */
         }
         #editor:focus {
             border-color: #3b82f6;
@@ -206,12 +195,22 @@
             editor.addEventListener('keydown', handleEnterKey);
             imageUpload.addEventListener('change', handleImageUpload);
             importFile.addEventListener('change', handleImport);
-            
+                        editor.addEventListener('paste', (event) => {
+                // デフォルトのペースト処理をキャンセル
+                event.preventDefault(); 
+                
+                // クリップボードからプレーンテキストを取得
+                const text = (event.clipboardData || window.clipboardData).getData('text/plain');
+                
+                // 取得したテキストをカーソル位置に挿入
+                document.execCommand('insertText', false, text);
+            });
             updatePreview();
             generateHtml();
 
             setupStickyToolbar();
         });
+
 
         // --- ツールバー固定機能 ---
         function setupStickyToolbar() {
