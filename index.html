@@ -427,10 +427,13 @@
             let content = editor.innerHTML;
             content = content.replace(/<font face="([^"]+)">/g, '<span style="font-family:$1;">').replace(/<font color="([^"]+)">/g, '<span style="color:$1;">').replace(/<\/font>/g, '</span>');
 
+            const { tocHtml, contentWithIds } = generateToc(content);
+
             const previewDoc = previewFrame.contentDocument;
             const previewStyles = `
 
                 h1,h2,h3 { margin-top: 1.5em; margin-bottom: 0.75em; font-weight: bold; }
+
                 h1 { font-size: 2.25em; border-bottom: 2px solid #374151; padding-bottom: 0.25em; }
                 h2 { font-size: 1.875em; border-bottom: 1px solid #374151; padding-bottom: 0.25em; }
                 h3 { font-size: 1.5em; }
@@ -457,11 +460,13 @@
                   }
                 };
                 <\/script>
+
                 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script>
-                </head><body><div class="preview-content">${content}</div></body></html>`);
+                </head><body><div class="preview-content">${tocHtml}${contentWithIds}</div></body></html>`);
             previewDoc.close();
             
             previewFrame.onload = () => {
+
                 const adjustHeight = () => {
                     const contentHeight = previewFrame.contentDocument.body.scrollHeight;
                     previewFrame.style.height = `${Math.max(contentHeight + 20, 400)}px`;
@@ -508,12 +513,21 @@
             const title = editor.querySelector('h1')?.textContent || '無題の記事';
 
             const finalHtml = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${title}</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$']],
+    displayMath: [['$$', '$$']]
+  }
+};
+<\/script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script>
 <style>
 body{font-family:system-ui,sans-serif;line-height:1.7;margin:0 auto;max-width:800px;padding:20px;background-color:#111827;color:#d1d5db}h1,h2,h3{margin-top:1.5em;margin-bottom:.75em;font-weight:700}h1{font-size:2.25em;border-bottom:2px solid #374151;padding-bottom:.25em}h2{font-size:1.875em;border-bottom:1px solid #374151;padding-bottom:.25em}h3{font-size:1.5em}p{margin-bottom:1em}b,strong{font-weight:700;color:#ffffff}img,iframe{max-width:100%;height:auto;border-radius:.5rem;margin:1em 0;box-shadow:0 4px 6px rgba(0,0,0,.1)}iframe{width:100%;min-height:450px;border:1px solid #4b5563}ul,ol{padding-left:1.5em;margin-bottom:1em}a{color:#fde047;text-decoration:underline}.toc{background-color:#1f2937;border:1px solid #4b5563;border-radius:.75rem;padding:1.5rem;margin-bottom:2rem}.toc h2{font-size:1.25em;margin-top:0;margin-bottom:1rem;border-bottom:1px solid #4b5563;padding-bottom:.5rem;color:#e5e7eb}.toc ul{list-style-type:none;padding-left:0}.toc ul ul{padding-left:1.5rem;margin-top:.5rem}.toc a{text-decoration:none;color:#d1d5db}.toc a:hover{text-decoration:underline;color:#fff}
 </style></head><body>
 
     ${tocHtml}
+
     ${contentWithIds}
 
 </body></html>`;
