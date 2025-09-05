@@ -423,13 +423,28 @@
 
         // --- HTML生成 & プレビュー ---
 
+// --- HTML生成 & プレビュー ---
+
         function updatePreview() {
             let content = editor.innerHTML;
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            tempDiv.querySelectorAll('[style]').forEach(el => {
+                el.style.removeProperty('background-color');
+                el.style.removeProperty('background');
+                if (el.style.length === 0) {
+                    el.removeAttribute('style');
+                }
+            });
+            content = tempDiv.innerHTML;
+
             content = content.replace(/<font face="([^"]+)">/g, '<span style="font-family:$1;">').replace(/<font color="([^"]+)">/g, '<span style="color:$1;">').replace(/<\/font>/g, '</span>');
 
             const { tocHtml, contentWithIds } = generateToc(content);
 
             const previewDoc = previewFrame.contentDocument;
+
             const previewStyles = `
 
                 h1,h2,h3 { margin-top: 1.5em; margin-bottom: 0.75em; font-weight: bold; }
@@ -505,14 +520,27 @@
             return { tocHtml: toc, contentWithIds: tempDiv.innerHTML };
         }
 
-        function generateHtml() {
+function generateHtml() {
             let content = editor.innerHTML;
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            tempDiv.querySelectorAll('[style]').forEach(el => {
+                el.style.removeProperty('background-color');
+                el.style.removeProperty('background');
+                if (el.style.length === 0) {
+                    el.removeAttribute('style');
+                }
+            });
+            content = tempDiv.innerHTML;
+
             content = content.replace(/<font color="([^"]+)">/g, '<span style="color:$1;">').replace(/<\/font>/g, '</span>');
 
             const { tocHtml, contentWithIds } = generateToc(content);
             const title = editor.querySelector('h1')?.textContent || '無題の記事';
 
             const finalHtml = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${title}</title>
+
 <script>
 MathJax = {
   tex: {
